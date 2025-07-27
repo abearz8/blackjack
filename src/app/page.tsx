@@ -6,6 +6,7 @@ import CardBack from "../components/CardBack";
 import * as globalState from "../utils/globalState";
 import { dealRandomCard, resetDeck, calculateHandValue } from "../utils/cardDeck";
 import { useState } from "react";
+import React from "react"; // Added missing import for React
 
 interface BettingChip {
   id: string;
@@ -43,6 +44,9 @@ export default function Home() {
     dealerHiddenCard: null,
     gameStarted: false
   });
+
+  // State for game outcomes
+  const [gameOutcome, setGameOutcome] = useState<'none' | 'win' | 'loss'>('none');
 
   // Function to refresh the display
   const refreshDisplay = () => {
@@ -119,6 +123,58 @@ export default function Home() {
       ...prevState,
       playerHand: [...prevState.playerHand, newCard]
     }));
+  };
+
+  // Check for win/loss conditions when player hand changes
+  React.useEffect(() => {
+    if (gameState.gameStarted && gameState.playerHand.length > 0) {
+      const playerHandValue = calculateHandValue(gameState.playerHand);
+      
+      if (playerHandValue === 21) {
+        handleWin();
+      } else if (playerHandValue > 21) {
+        handleLoss();
+      }
+    }
+  }, [gameState.playerHand]);
+
+  // Function to handle win
+  const handleWin = () => {
+    setGameOutcome('win');
+    // Add winnings to total money (wager * 2)
+    globalState.addMoney(moneyState.moneyWagered * 2);
+    refreshDisplay();
+  };
+
+  // Function to handle loss
+  const handleLoss = () => {
+    setGameOutcome('loss');
+  };
+
+  // Function to return to main screen
+  const handleReturnToMain = () => {
+    // Reset game state
+    setGameState({
+      playerHand: [],
+      dealerHand: [],
+      dealerHiddenCard: null,
+      gameStarted: false
+    });
+    
+    // Reset game outcome
+    setGameOutcome('none');
+    
+    // Clear betting chips
+    setBettingChips([]);
+    
+    // Reset money wagered
+    globalState.resetMoneyWagered();
+    
+    // Show betting UI
+    setShowBettingUI(true);
+    
+    // Refresh display
+    refreshDisplay();
   };
 
   // Function to calculate card positions for centering
@@ -242,25 +298,31 @@ export default function Home() {
         }}>
           <button
             onClick={handleStartGame}
+            disabled={bettingChips.length === 0 || moneyState.moneyWagered === 0}
             style={{
               padding: "1vw 2vw",
               fontSize: "1.5vw",
               fontWeight: "bold",
-              backgroundColor: "#27ae60",
+              backgroundColor: bettingChips.length === 0 || moneyState.moneyWagered === 0 ? "#cccccc" : "#27ae60",
               color: "#fff",
               border: "0.2vw solid #fff",
               borderRadius: "0.8vw",
-              cursor: "pointer",
+              cursor: bettingChips.length === 0 || moneyState.moneyWagered === 0 ? "not-allowed" : "pointer",
               boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
               transition: "all 0.2s ease",
               width: "28vw", // Span from 36% to 60% = 24% + some padding
               minWidth: "28vw",
+              opacity: bettingChips.length === 0 || moneyState.moneyWagered === 0 ? 0.6 : 1,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#2ecc71";
+              if (bettingChips.length > 0 && moneyState.moneyWagered > 0) {
+                e.currentTarget.style.backgroundColor = "#2ecc71";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#27ae60";
+              if (bettingChips.length > 0 && moneyState.moneyWagered > 0) {
+                e.currentTarget.style.backgroundColor = "#27ae60";
+              }
             }}
           >
             Start
@@ -347,7 +409,7 @@ export default function Home() {
           </div>
 
           {/* Game Action Buttons */}
-          {gameState.gameStarted && (
+          {gameState.gameStarted && gameOutcome === 'none' && (
             <div style={{
               position: "absolute",
               bottom: "8%",
@@ -407,6 +469,95 @@ export default function Home() {
               >
                 Stand
               </button>
+            </div>
+          )}
+
+          {/* Win Popup */}
+          {gameOutcome === 'win' && (
+            <div style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "rgba(0,0,0,0.8)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: "#27ae60",
+                padding: "4vw",
+                borderRadius: "1vw",
+                textAlign: "center",
+                color: "white",
+                boxShadow: "0 0 2vw rgba(0,0,0,0.5)"
+              }}>
+                <h1 style={{ fontSize: "3vw", marginBottom: "2vw" }}>You Won!</h1>
+                <h2 style={{ fontSize: "2vw", marginBottom: "3vw" }}>
+                  Winnings: ${moneyState.moneyWagered * 2}
+                </h2>
+                <button
+                  onClick={handleReturnToMain}
+                  style={{
+                    padding: "1vw 3vw",
+                    fontSize: "1.5vw",
+                    fontWeight: "bold",
+                    backgroundColor: "#fff",
+                    color: "#27ae60",
+                    border: "none",
+                    borderRadius: "0.5vw",
+                    cursor: "pointer",
+                    boxShadow: "0 0.2vw 0.5vw rgba(0,0,0,0.2)"
+                  }}
+                >
+                  Return
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Loss Popup */}
+          {gameOutcome === 'loss' && (
+            <div style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "rgba(0,0,0,0.8)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: "#e74c3c",
+                padding: "4vw",
+                borderRadius: "1vw",
+                textAlign: "center",
+                color: "white",
+                boxShadow: "0 0 2vw rgba(0,0,0,0.5)"
+              }}>
+                <h1 style={{ fontSize: "3vw", marginBottom: "3vw" }}>You Lost!</h1>
+                <button
+                  onClick={handleReturnToMain}
+                  style={{
+                    padding: "1vw 3vw",
+                    fontSize: "1.5vw",
+                    fontWeight: "bold",
+                    backgroundColor: "#fff",
+                    color: "#e74c3c",
+                    border: "none",
+                    borderRadius: "0.5vw",
+                    cursor: "pointer",
+                    boxShadow: "0 0.2vw 0.5vw rgba(0,0,0,0.2)"
+                  }}
+                >
+                  Return
+                </button>
+              </div>
             </div>
           )}
         </div>
