@@ -16,8 +16,8 @@ export interface CardType {
 }
 
 interface CardProps extends CardType {
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
 }
 
 function getCardLabel(number: number) {
@@ -47,19 +47,17 @@ const CARD_HEIGHT = 240;
 const Card: React.FC<CardProps> = ({ number, suit, x, y }) => (
   <div
     style={{
-      position: "absolute",
-      left: x,
-      top: y,
-      width: CARD_WIDTH,
-      height: CARD_HEIGHT,
+      position: "relative",
+      width: "6vw",
+      height: "9vw",
       border: "1px solid #333",
-      borderRadius: 8,
+      borderRadius: "0.4vw",
       background: "#fff",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: 28,
+      fontSize: "1.4vw",
       color: suit === Suit.Hearts || suit === Suit.Diamonds ? "#d00" : "#222",
       boxShadow: "2px 2px 8px rgba(0,0,0,0.1)",
       overflow: "hidden",
@@ -69,22 +67,22 @@ const Card: React.FC<CardProps> = ({ number, suit, x, y }) => (
     <div
       style={{
         position: "absolute",
-        top: 10,
-        left: 10,
-        fontSize: 28,
+        top: "0.3vw",
+        left: "0.3vw",
+        fontSize: "0.9vw",
       }}
     >
       {getCardLabel(number)}
     </div>
     {/* Center suit */}
-    <div style={{ fontSize: 64 }}>{getSuitSymbol(suit)}</div>
+    <div style={{ fontSize: "3vw" }}>{getSuitSymbol(suit)}</div>
     {/* Bottom right number */}
     <div
       style={{
         position: "absolute",
-        bottom: 10,
-        right: 10,
-        fontSize: 28,
+        bottom: "0.3vw",
+        right: "0.3vw",
+        fontSize: "0.9vw",
       }}
     >
       {getCardLabel(number)}

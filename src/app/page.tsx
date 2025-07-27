@@ -1,7 +1,10 @@
 "use client";
 
 import Chip from "../components/Chip";
+import Card from "../components/Card";
+import CardBack from "../components/CardBack";
 import * as globalState from "../utils/globalState";
+import { dealRandomCard, resetDeck } from "../utils/cardDeck";
 import { useState } from "react";
 
 interface BettingChip {
@@ -11,6 +14,13 @@ interface BettingChip {
   color: string;
   x: number;
   y: number;
+}
+
+interface GameState {
+  playerHand: any[];
+  dealerHand: any[];
+  dealerHiddenCard: any | null;
+  gameStarted: boolean;
 }
 
 export default function Home() {
@@ -25,6 +35,14 @@ export default function Home() {
 
   // State to control visibility of UI elements
   const [showBettingUI, setShowBettingUI] = useState(true);
+
+  // State for blackjack game
+  const [gameState, setGameState] = useState<GameState>({
+    playerHand: [],
+    dealerHand: [],
+    dealerHiddenCard: null,
+    gameStarted: false
+  });
 
   // Function to refresh the display
   const refreshDisplay = () => {
@@ -72,6 +90,22 @@ export default function Home() {
 
   // Function to start the game
   const handleStartGame = () => {
+    // Reset the deck
+    resetDeck();
+    
+    // Deal initial cards
+    const playerCard1 = dealRandomCard();
+    const dealerCard1 = dealRandomCard();
+    const playerCard2 = dealRandomCard();
+    const dealerCard2 = dealRandomCard();
+    
+    setGameState({
+      playerHand: [playerCard1, playerCard2],
+      dealerHand: [dealerCard1],
+      dealerHiddenCard: dealerCard2,
+      gameStarted: true
+    });
+    
     setShowBettingUI(false); // Hide betting UI
   };
 
@@ -204,6 +238,74 @@ export default function Home() {
           >
             Start
           </button>
+        </div>
+      )}
+
+      {/* Game Display */}
+      {gameState.gameStarted && (
+        <div>
+          {/* Dealer's Hand Container */}
+          <div style={{
+            position: "absolute",
+            top: "25%",
+            left: "10%",
+            width: "80%",
+            height: "15%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>Dealer's Hand:</h3>
+            <div style={{
+              display: "flex",
+              gap: "1vw",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              {gameState.dealerHand.map((card, index) => (
+                <Card
+                  key={`dealer-${index}`}
+                  number={card.number}
+                  suit={card.suit}
+                />
+              ))}
+              {gameState.dealerHiddenCard && (
+                <CardBack
+                  key="dealer-hidden"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Player's Hand Container */}
+          <div style={{
+            position: "absolute",
+            bottom: "28%",
+            left: "10%",
+            width: "80%",
+            height: "15%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>Your Hand:</h3>
+            <div style={{
+              display: "flex",
+              gap: "1vw",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              {gameState.playerHand.map((card, index) => (
+                <Card
+                  key={`player-${index}`}
+                  number={card.number}
+                  suit={card.suit}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
