@@ -1,5 +1,6 @@
 "use client";
 
+// Import React components and utilities
 import Chip from "../components/Chip";
 import Card from "../components/Card";
 import CardBack from "../components/CardBack";
@@ -8,6 +9,7 @@ import { dealRandomCard, resetDeck, calculateHandValue } from "../utils/cardDeck
 import { useState } from "react";
 import React from "react"; // Added missing import for React
 
+// Interface for betting chips that appear in the center betting area
 interface BettingChip {
   id: string;
   value: number;
@@ -17,6 +19,7 @@ interface BettingChip {
   y: number;
 }
 
+// Interface for tracking the current game state
 interface GameState {
   playerHand: any[];
   dealerHand: any[];
@@ -25,7 +28,7 @@ interface GameState {
 }
 
 export default function Home() {
-  // State to force re-renders when money changes
+  // State to force re-renders when money changes (since we use global state)
   const [moneyState, setMoneyState] = useState({
     totalMoney: globalState.getTotalMoney(),
     moneyWagered: globalState.getMoneyWagered()
@@ -34,10 +37,10 @@ export default function Home() {
   // State for chips in the betting area (center of screen)
   const [bettingChips, setBettingChips] = useState<BettingChip[]>([]);
 
-  // State to control visibility of UI elements
+  // State to control visibility of UI elements (betting vs game)
   const [showBettingUI, setShowBettingUI] = useState(true);
 
-  // State for blackjack game
+  // State for blackjack game (cards, hands, game status)
   const [gameState, setGameState] = useState<GameState>({
     playerHand: [],
     dealerHand: [],
@@ -45,22 +48,22 @@ export default function Home() {
     gameStarted: false
   });
 
-  // State for game outcomes
+  // State for game outcomes (none, win, loss, blackjack)
   const [gameOutcome, setGameOutcome] = useState<'none' | 'win' | 'loss' | 'blackjack'>('none');
 
-  // State to track if player has stood
+  // State to track if player has stood (can't hit anymore)
   const [playerStood, setPlayerStood] = useState(false);
 
-  // State to track if player has busted
+  // State to track if player has busted (hand > 21)
   const [playerBusted, setPlayerBusted] = useState(false);
 
-  // State to track if player has blackjack
+  // State to track if player has blackjack (hand = 21)
   const [playerBlackjack, setPlayerBlackjack] = useState(false);
 
-  // State to track if player is broke
+  // State to track if player is broke (no money left)
   const [playerBroke, setPlayerBroke] = useState(false);
 
-  // Function to refresh the display
+  // Function to refresh the display when global money state changes
   const refreshDisplay = () => {
     setMoneyState({
       totalMoney: globalState.getTotalMoney(),
@@ -76,7 +79,7 @@ export default function Home() {
     return { x, y };
   };
 
-  // Function to add chip to betting area
+  // Function to add chip to betting area with random positioning
   const addChipToBettingArea = (value: number, displayText: string, color: string) => {
     const position = getRandomBettingPosition();
     const newChip: BettingChip = {
@@ -90,11 +93,11 @@ export default function Home() {
     setBettingChips(prev => [...prev, newChip]);
   };
 
-  // Function to remove chip from betting area
+  // Function to remove chip from betting area and reverse the betting effect
   const removeChipFromBettingArea = (chipId: string) => {
     const chipToRemove = bettingChips.find(chip => chip.id === chipId);
     if (chipToRemove) {
-      // Reverse the betting effect
+      // Reverse the betting effect - add money back to total, subtract from wagered
       globalState.subtractMoneyWagered(chipToRemove.value);
       globalState.addMoney(chipToRemove.value);
       refreshDisplay();
@@ -104,17 +107,18 @@ export default function Home() {
     }
   };
 
-  // Function to start the game
+  // Function to start the game - deal initial cards and hide betting UI
   const handleStartGame = () => {
-    // Reset the deck
+    // Reset the deck for a new game
     resetDeck();
     
-    // Deal initial cards
+    // Deal initial cards: player gets 2, dealer gets 1 visible + 1 hidden
     const playerCard1 = dealRandomCard();
     const dealerCard1 = dealRandomCard();
     const playerCard2 = dealRandomCard();
     const dealerCard2 = dealRandomCard();
     
+    // Set up initial game state
     setGameState({
       playerHand: [playerCard1, playerCard2],
       dealerHand: [dealerCard1],
@@ -122,10 +126,10 @@ export default function Home() {
       gameStarted: true
     });
     
-    setShowBettingUI(false); // Hide betting UI
+    setShowBettingUI(false); // Hide betting UI, show game UI
   };
 
-  // Function to handle hit
+  // Function to handle hit - deal a new card to the player
   const handleHit = () => {
     // Deal a new card to the player
     const newCard = dealRandomCard();
@@ -137,9 +141,9 @@ export default function Home() {
     }));
   };
 
-  // Function to handle stand
+  // Function to handle stand - dealer plays out their hand
   const handleStand = () => {
-    // Set player as stood
+    // Set player as stood (can't hit anymore)
     setPlayerStood(true);
     
     // First, flip the dealer's hidden card immediately
@@ -159,13 +163,13 @@ export default function Home() {
       dealerHiddenCard: null
     }));
     
-    // Start dealer hitting process
+    // Start dealer hitting process with delays for suspense
     let dealerHand = [...currentDealerHand];
     let hitCount = 0;
     
     const dealerHit = () => {
       if (calculateHandValue(dealerHand) < 17) {
-        // Dealer needs to hit
+        // Dealer needs to hit (house rules: hit on < 17)
         setTimeout(() => {
           const newCard = dealRandomCard();
           dealerHand.push(newCard);
@@ -179,7 +183,7 @@ export default function Home() {
           
           hitCount++;
           dealerHit(); // Continue hitting if needed
-        }, 1200); // 1.2 second delay between hits
+        }, 1200); // 1.2 second delay between hits for suspense
       } else {
         // Dealer is done, determine winner after a delay
         setTimeout(() => {
@@ -204,39 +208,7 @@ export default function Home() {
     dealerHit();
   };
 
-  // Check for win/loss conditions when player hand changes
-  React.useEffect(() => {
-    if (gameState.gameStarted && gameState.playerHand.length > 0) {
-      const playerHandValue = calculateHandValue(gameState.playerHand);
-      
-      if (playerHandValue === 21) {
-        // Set blackjack state immediately
-        setPlayerBlackjack(true);
-        // Add delay before showing win popup
-        setTimeout(() => {
-          handleBlackjack();
-        }, 1500); // 1.5 second delay
-      } else if (playerHandValue > 21) {
-        // Set busted state immediately
-        setPlayerBusted(true);
-        // Add delay before showing loss popup
-        setTimeout(() => {
-          handleLoss();
-        }, 1500); // 1.5 second delay
-      }
-    }
-  }, [gameState.playerHand]);
-
-  // Check for broke condition when money state changes
-  React.useEffect(() => {
-    if (showBettingUI && moneyState.totalMoney === 0 && moneyState.moneyWagered === 0) {
-      // Player is broke - this will trigger the broke popup
-      console.log("Player is broke!");
-      setPlayerBroke(true);
-    }
-  }, [moneyState.totalMoney, moneyState.moneyWagered, showBettingUI]);
-
-  // Function to handle win
+  // Function to handle win (regular win, not blackjack)
   const handleWin = () => {
     setGameOutcome('win');
     // Add winnings to total money (wager * 2)
@@ -244,7 +216,7 @@ export default function Home() {
     refreshDisplay();
   };
 
-  // Function to handle blackjack
+  // Function to handle blackjack (natural 21)
   const handleBlackjack = () => {
     setGameOutcome('blackjack');
     // Add winnings to total money (wager * 2)
@@ -257,7 +229,7 @@ export default function Home() {
     setGameOutcome('loss');
   };
 
-  // Function to return to main screen
+  // Function to return to main screen and reset all game state
   const handleReturnToMain = () => {
     // Reset game state
     setGameState({
@@ -314,7 +286,39 @@ export default function Home() {
     });
   };
 
-  // Placeholder click handlers - fill these out with your logic
+  // Check for win/loss conditions when player hand changes
+  React.useEffect(() => {
+    if (gameState.gameStarted && gameState.playerHand.length > 0) {
+      const playerHandValue = calculateHandValue(gameState.playerHand);
+      
+      if (playerHandValue === 21) {
+        // Set blackjack state immediately
+        setPlayerBlackjack(true);
+        // Add delay before showing win popup
+        setTimeout(() => {
+          handleBlackjack();
+        }, 1500); // 1.5 second delay
+      } else if (playerHandValue > 21) {
+        // Set busted state immediately
+        setPlayerBusted(true);
+        // Add delay before showing loss popup
+        setTimeout(() => {
+          handleLoss();
+        }, 1500); // 1.5 second delay
+      }
+    }
+  }, [gameState.playerHand]);
+
+  // Check for broke condition when money state changes
+  React.useEffect(() => {
+    if (showBettingUI && moneyState.totalMoney === 0 && moneyState.moneyWagered === 0) {
+      // Player is broke - this will trigger the broke popup
+      console.log("Player is broke!");
+      setPlayerBroke(true);
+    }
+  }, [moneyState.totalMoney, moneyState.moneyWagered, showBettingUI]);
+
+  // Placeholder click handlers for chip betting - fill these out with your logic
   const handleChip1Click = () => {
     if(globalState.getTotalMoney() >= 1) {
       globalState.addMoneyWagered(1);
@@ -362,7 +366,7 @@ export default function Home() {
 
   return (
     <div>
-      {/* Change Background to green */}
+      {/* Green felt table background */}
       <div style={{
         position: "fixed",
         top: 0,
@@ -374,7 +378,7 @@ export default function Home() {
       }}>
       </div>
 
-      {/* Labels */}
+      {/* Money display labels at the top */}
       <div>
         <div style={{
           position: "absolute",
@@ -392,7 +396,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Broke Popup */}
+      {/* Broke Popup - appears when player has no money */}
       {showBettingUI && playerBroke && (
         <div style={{
           position: "fixed",
@@ -425,7 +429,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Betting Area Chips (Center of Screen) */}
+      {/* Betting Area Chips (Center of Screen) - chips placed during betting */}
       {showBettingUI && (
         <div>
           {bettingChips.map((chip) => (
@@ -443,7 +447,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Start Button */}
+      {/* Start Button - only visible during betting phase */}
       {showBettingUI && (
         <div style={{
           position: "absolute",
@@ -485,7 +489,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Game Display */}
+      {/* Game Display - only visible when game is active */}
       {gameState.gameStarted && (
         <div>
           {/* Dealer's Hand Container */}
@@ -571,7 +575,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Game Action Buttons */}
+          {/* Game Action Buttons - Hit and Stand */}
           {gameState.gameStarted && gameOutcome === 'none' && (
             <div style={{
               position: "absolute",
@@ -773,7 +777,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Bottom Chips */}
+      {/* Bottom Chips - betting chips at the bottom of the screen */}
       {showBettingUI && (
         <div>
           <Chip 
