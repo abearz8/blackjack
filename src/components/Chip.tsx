@@ -9,6 +9,7 @@ interface ChipProps {
   x: number;
   y: number;
   size?: number;
+  onClick?: () => void;
 }
 
 const Chip: React.FC<ChipProps> = ({ 
@@ -17,15 +18,16 @@ const Chip: React.FC<ChipProps> = ({
   color, 
   x, 
   y, 
-  size = 64 
+  size = 4, // Default to 8vw instead of 64px
+  onClick
 }) => (
   <div
     style={{
       position: "absolute",
-      left: x,
-      top: y,
-      width: size,
-      height: size,
+      left: `${x}%`,
+      top: `${y}%`,
+      width: `${size}vw`,
+      height: `${size}vw`,
       borderRadius: "50%",
       background: color,
       display: "flex",
@@ -34,12 +36,13 @@ const Chip: React.FC<ChipProps> = ({
       boxShadow: "2px 2px 8px rgba(0,0,0,0.15)",
       border: "3px solid #fff",
       fontWeight: 700,
-      fontSize: size / 2.5,
+      fontSize: `${size * 0.4}vw`, // Scale font size with chip size
       color: "#fff",
       userSelect: "none",
       cursor: "pointer",
       transition: "transform 0.1s ease",
     }}
+    onClick={onClick}
     onMouseEnter={(e) => {
       e.currentTarget.style.transform = "scale(1.1)";
     }}

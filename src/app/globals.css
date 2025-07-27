@@ -1,1 +1,28 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Green felt table background */
+.table-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #35654d;
+  z-index: -1;
+}
