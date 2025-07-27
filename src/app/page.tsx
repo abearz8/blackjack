@@ -46,10 +46,16 @@ export default function Home() {
   });
 
   // State for game outcomes
-  const [gameOutcome, setGameOutcome] = useState<'none' | 'win' | 'loss'>('none');
+  const [gameOutcome, setGameOutcome] = useState<'none' | 'win' | 'loss' | 'blackjack'>('none');
 
   // State to track if player has stood
   const [playerStood, setPlayerStood] = useState(false);
+
+  // State to track if player has busted
+  const [playerBusted, setPlayerBusted] = useState(false);
+
+  // State to track if player has blackjack
+  const [playerBlackjack, setPlayerBlackjack] = useState(false);
 
   // Function to refresh the display
   const refreshDisplay = () => {
@@ -133,7 +139,7 @@ export default function Home() {
     // Set player as stood
     setPlayerStood(true);
     
-    // First, flip the dealer's hidden card
+    // First, flip the dealer's hidden card immediately
     let currentDealerHand = [...gameState.dealerHand];
     let currentDealerHiddenCard = gameState.dealerHiddenCard;
     
@@ -143,35 +149,56 @@ export default function Home() {
       currentDealerHiddenCard = null;
     }
     
-    // Dealer hits until hand is >= 17
-    while (calculateHandValue(currentDealerHand) < 17) {
-      const newCard = dealRandomCard();
-      currentDealerHand.push(newCard);
-    }
-    
-    // Update game state with dealer's final hand
+    // Update game state to show flipped card
     setGameState(prevState => ({
       ...prevState,
       dealerHand: currentDealerHand,
       dealerHiddenCard: null
     }));
     
-    // Determine winner after a short delay to show dealer's actions
-    setTimeout(() => {
-      const dealerValue = calculateHandValue(currentDealerHand);
-      const playerValue = calculateHandValue(gameState.playerHand);
-      
-      if (dealerValue > 21) {
-        // Dealer busts, player wins
-        handleWin();
-      } else if (dealerValue >= playerValue) {
-        // Dealer wins or ties
-        handleLoss();
+    // Start dealer hitting process
+    let dealerHand = [...currentDealerHand];
+    let hitCount = 0;
+    
+    const dealerHit = () => {
+      if (calculateHandValue(dealerHand) < 17) {
+        // Dealer needs to hit
+        setTimeout(() => {
+          const newCard = dealRandomCard();
+          dealerHand.push(newCard);
+          
+          // Update game state with new card
+          setGameState(prevState => ({
+            ...prevState,
+            dealerHand: dealerHand,
+            dealerHiddenCard: null
+          }));
+          
+          hitCount++;
+          dealerHit(); // Continue hitting if needed
+        }, 1200); // 1.2 second delay between hits
       } else {
-        // Player wins
-        handleWin();
+        // Dealer is done, determine winner after a delay
+        setTimeout(() => {
+          const dealerValue = calculateHandValue(dealerHand);
+          const playerValue = calculateHandValue(gameState.playerHand);
+          
+          if (dealerValue > 21) {
+            // Dealer busts, player wins
+            handleWin();
+          } else if (dealerValue >= playerValue) {
+            // Dealer wins or ties
+            handleLoss();
+          } else {
+            // Player wins
+            handleWin();
+          }
+        }, 1500); // 1.5 second delay before showing result
       }
-    }, 3000); // 3 second delay to show dealer's actions
+    };
+    
+    // Start the dealer hitting process
+    dealerHit();
   };
 
   // Check for win/loss conditions when player hand changes
@@ -180,11 +207,15 @@ export default function Home() {
       const playerHandValue = calculateHandValue(gameState.playerHand);
       
       if (playerHandValue === 21) {
+        // Set blackjack state immediately
+        setPlayerBlackjack(true);
         // Add delay before showing win popup
         setTimeout(() => {
-          handleWin();
+          handleBlackjack();
         }, 1500); // 1.5 second delay
       } else if (playerHandValue > 21) {
+        // Set busted state immediately
+        setPlayerBusted(true);
         // Add delay before showing loss popup
         setTimeout(() => {
           handleLoss();
@@ -196,6 +227,14 @@ export default function Home() {
   // Function to handle win
   const handleWin = () => {
     setGameOutcome('win');
+    // Add winnings to total money (wager * 2)
+    globalState.addMoney(moneyState.moneyWagered * 2);
+    refreshDisplay();
+  };
+
+  // Function to handle blackjack
+  const handleBlackjack = () => {
+    setGameOutcome('blackjack');
     // Add winnings to total money (wager * 2)
     globalState.addMoney(moneyState.moneyWagered * 2);
     refreshDisplay();
@@ -221,6 +260,12 @@ export default function Home() {
     
     // Reset player stood state
     setPlayerStood(false);
+    
+    // Reset player busted state
+    setPlayerBusted(false);
+    
+    // Reset player blackjack state
+    setPlayerBlackjack(false);
     
     // Clear betting chips
     setBettingChips([]);
@@ -484,7 +529,7 @@ export default function Home() {
               display: "flex",
               gap: "2vw"
             }}>
-              {!playerStood && (
+              {!playerStood && !playerBusted && !playerBlackjack && (
                 <button
                   onClick={handleHit}
                   style={{
@@ -510,7 +555,7 @@ export default function Home() {
                   Hit
                 </button>
               )}
-              {!playerStood && (
+              {!playerStood && !playerBusted && !playerBlackjack && (
                 <button
                   onClick={handleStand}
                   style={{
@@ -562,6 +607,52 @@ export default function Home() {
                 boxShadow: "0 0 2vw rgba(0,0,0,0.5)"
               }}>
                 <h1 style={{ fontSize: "3vw", marginBottom: "2vw" }}>You Won!</h1>
+                <h2 style={{ fontSize: "2vw", marginBottom: "3vw" }}>
+                  Winnings: ${moneyState.moneyWagered * 2}
+                </h2>
+                <button
+                  onClick={handleReturnToMain}
+                  style={{
+                    padding: "1vw 3vw",
+                    fontSize: "1.5vw",
+                    fontWeight: "bold",
+                    backgroundColor: "#fff",
+                    color: "#27ae60",
+                    border: "none",
+                    borderRadius: "0.5vw",
+                    cursor: "pointer",
+                    boxShadow: "0 0.2vw 0.5vw rgba(0,0,0,0.2)"
+                  }}
+                >
+                  Return
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Blackjack Popup */}
+          {gameOutcome === 'blackjack' && (
+            <div style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "rgba(0,0,0,0.8)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: "#27ae60",
+                padding: "4vw",
+                borderRadius: "1vw",
+                textAlign: "center",
+                color: "white",
+                boxShadow: "0 0 2vw rgba(0,0,0,0.5)"
+              }}>
+                <h1 style={{ fontSize: "3vw", marginBottom: "2vw" }}>Blackjack!</h1>
                 <h2 style={{ fontSize: "2vw", marginBottom: "3vw" }}>
                   Winnings: ${moneyState.moneyWagered * 2}
                 </h2>
