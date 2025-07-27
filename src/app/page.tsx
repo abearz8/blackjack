@@ -57,6 +57,9 @@ export default function Home() {
   // State to track if player has blackjack
   const [playerBlackjack, setPlayerBlackjack] = useState(false);
 
+  // State to track if player is broke
+  const [playerBroke, setPlayerBroke] = useState(false);
+
   // Function to refresh the display
   const refreshDisplay = () => {
     setMoneyState({
@@ -224,6 +227,15 @@ export default function Home() {
     }
   }, [gameState.playerHand]);
 
+  // Check for broke condition when money state changes
+  React.useEffect(() => {
+    if (showBettingUI && moneyState.totalMoney === 0 && moneyState.moneyWagered === 0) {
+      // Player is broke - this will trigger the broke popup
+      console.log("Player is broke!");
+      setPlayerBroke(true);
+    }
+  }, [moneyState.totalMoney, moneyState.moneyWagered, showBettingUI]);
+
   // Function to handle win
   const handleWin = () => {
     setGameOutcome('win');
@@ -278,6 +290,13 @@ export default function Home() {
     
     // Refresh display
     refreshDisplay();
+    
+    // Check for broke condition after a short delay
+    setTimeout(() => {
+      if (moneyState.totalMoney === 0 && moneyState.moneyWagered === 0) {
+        setPlayerBroke(true);
+      }
+    }, 3000); // 3 second delay to ensure main screen is fully loaded
   };
 
   // Function to calculate card positions for centering
@@ -372,6 +391,39 @@ export default function Home() {
           <h2 style={{ marginTop: "-15px" }}>Money Wagered: {moneyState.moneyWagered}</h2>
         </div>
       </div>
+
+      {/* Broke Popup */}
+      {showBettingUI && playerBroke && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: "#2c3e50",
+            padding: "4vw",
+            borderRadius: "1vw",
+            textAlign: "center",
+            color: "white",
+            boxShadow: "0 0 2vw rgba(0,0,0,0.5)"
+          }}>
+            <h1 style={{ fontSize: "2.5vw", marginBottom: "2vw" }}>Ha! You lost all your money.</h1>
+            <h2 style={{ fontSize: "1.8vw", marginBottom: "3vw" }}>
+              Good thing this is only a game and not real life...
+            </h2>
+            <h3 style={{ fontSize: "1.5vw", marginBottom: "3vw" }}>
+              Reload your browser to reset ;)
+            </h3>
+          </div>
+        </div>
+      )}
 
       {/* Betting Area Chips (Center of Screen) */}
       {showBettingUI && (
@@ -724,11 +776,51 @@ export default function Home() {
       {/* Bottom Chips */}
       {showBettingUI && (
         <div>
-          <Chip value={1} displayText="1" color="#e74c3c" x={36} y={85} onClick={handleChip1Click} visible={true} />
-          <Chip value={5} displayText="5" color="#f1c40f" x={42} y={85} onClick={handleChip5Click} visible={true} />
-          <Chip value={10} displayText="10" color="#2ecc71" x={48} y={85} onClick={handleChip10Click} visible={true} />
-          <Chip value={25} displayText="25" color="#3498db" x={54} y={85} onClick={handleChip25Click} visible={true} />
-          <Chip value={100} displayText="100" color="#2c3e50" x={60} y={85} onClick={handleChip100Click} visible={true} />
+          <Chip 
+            value={1} 
+            displayText="1" 
+            color={moneyState.totalMoney >= 1 ? "#e74c3c" : "#cccccc"} 
+            x={36} 
+            y={85} 
+            onClick={moneyState.totalMoney >= 1 ? handleChip1Click : undefined} 
+            visible={true} 
+          />
+          <Chip 
+            value={5} 
+            displayText="5" 
+            color={moneyState.totalMoney >= 5 ? "#f1c40f" : "#cccccc"} 
+            x={42} 
+            y={85} 
+            onClick={moneyState.totalMoney >= 5 ? handleChip5Click : undefined} 
+            visible={true} 
+          />
+          <Chip 
+            value={10} 
+            displayText="10" 
+            color={moneyState.totalMoney >= 10 ? "#2ecc71" : "#cccccc"} 
+            x={48} 
+            y={85} 
+            onClick={moneyState.totalMoney >= 10 ? handleChip10Click : undefined} 
+            visible={true} 
+          />
+          <Chip 
+            value={25} 
+            displayText="25" 
+            color={moneyState.totalMoney >= 25 ? "#3498db" : "#cccccc"} 
+            x={54} 
+            y={85} 
+            onClick={moneyState.totalMoney >= 25 ? handleChip25Click : undefined} 
+            visible={true} 
+          />
+          <Chip 
+            value={100} 
+            displayText="100" 
+            color={moneyState.totalMoney >= 100 ? "#2c3e50" : "#cccccc"} 
+            x={60} 
+            y={85} 
+            onClick={moneyState.totalMoney >= 100 ? handleChip100Click : undefined} 
+            visible={true} 
+          />
         </div>
       )}
     </div>
