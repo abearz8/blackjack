@@ -23,6 +23,9 @@ export default function Home() {
   // State for chips in the betting area (center of screen)
   const [bettingChips, setBettingChips] = useState<BettingChip[]>([]);
 
+  // State to control visibility of UI elements
+  const [showBettingUI, setShowBettingUI] = useState(true);
+
   // Function to refresh the display
   const refreshDisplay = () => {
     setMoneyState({
@@ -65,6 +68,11 @@ export default function Home() {
       // Remove from betting area
       setBettingChips(prev => prev.filter(chip => chip.id !== chipId));
     }
+  };
+
+  // Function to start the game
+  const handleStartGame = () => {
+    setShowBettingUI(false); // Hide betting UI
   };
 
   // Placeholder click handlers - fill these out with your logic
@@ -146,65 +154,69 @@ export default function Home() {
       </div>
 
       {/* Betting Area Chips (Center of Screen) */}
-      <div>
-        {bettingChips.map((chip) => (
-          <Chip
-            key={chip.id}
-            value={chip.value}
-            displayText={chip.displayText}
-            color={chip.color}
-            x={chip.x}
-            y={chip.y}
-            size={6} // Slightly larger than bottom chips
-            onClick={() => removeChipFromBettingArea(chip.id)}
-          />
-        ))}
-      </div>
+      {showBettingUI && (
+        <div>
+          {bettingChips.map((chip) => (
+            <Chip
+              key={chip.id}
+              value={chip.value}
+              displayText={chip.displayText}
+              color={chip.color}
+              x={chip.x}
+              y={chip.y}
+              size={6} // Larger size for betting chips
+              onClick={() => removeChipFromBettingArea(chip.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Start Button */}
-      <div style={{
-        position: "absolute",
-        top: "75%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-      }}>
-        <button
-          onClick={() => {
-            
-          }}
-          style={{
-            padding: "1vw 2vw",
-            fontSize: "1.5vw",
-            fontWeight: "bold",
-            backgroundColor: "#27ae60",
-            color: "#fff",
-            border: "0.2vw solid #fff",
-            borderRadius: "0.8vw",
-            cursor: "pointer",
-            boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
-            transition: "all 0.2s ease",
-            width: "28vw", // Span from 36% to 60% = 24% + some padding
-            minWidth: "28vw",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#2ecc71";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#27ae60";
-          }}
-        >
-          Start
-        </button>
-      </div>
+      {showBettingUI && (
+        <div style={{
+          position: "absolute",
+          top: "75%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}>
+          <button
+            onClick={handleStartGame}
+            style={{
+              padding: "1vw 2vw",
+              fontSize: "1.5vw",
+              fontWeight: "bold",
+              backgroundColor: "#27ae60",
+              color: "#fff",
+              border: "0.2vw solid #fff",
+              borderRadius: "0.8vw",
+              cursor: "pointer",
+              boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
+              transition: "all 0.2s ease",
+              width: "28vw", // Span from 36% to 60% = 24% + some padding
+              minWidth: "28vw",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#2ecc71";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#27ae60";
+            }}
+          >
+            Start
+          </button>
+        </div>
+      )}
 
       {/* Bottom Chips */}
-      <div>
-        <Chip value={1} displayText="1" color="#e74c3c" x={36} y={85} onClick={handleChip1Click} visible={true} />
-        <Chip value={5} displayText="5" color="#f1c40f" x={42} y={85} onClick={handleChip5Click} visible={true} />
-        <Chip value={10} displayText="10" color="#2ecc71" x={48} y={85} onClick={handleChip10Click} visible={true} />
-        <Chip value={25} displayText="25" color="#3498db" x={54} y={85} onClick={handleChip25Click} visible={true} />
-        <Chip value={100} displayText="100" color="#2c3e50" x={60} y={85} onClick={handleChip100Click} visible={true} />
-      </div>
+      {showBettingUI && (
+        <div>
+          <Chip value={1} displayText="1" color="#e74c3c" x={36} y={85} onClick={handleChip1Click} visible={true} />
+          <Chip value={5} displayText="5" color="#f1c40f" x={42} y={85} onClick={handleChip5Click} visible={true} />
+          <Chip value={10} displayText="10" color="#2ecc71" x={48} y={85} onClick={handleChip10Click} visible={true} />
+          <Chip value={25} displayText="25" color="#3498db" x={54} y={85} onClick={handleChip25Click} visible={true} />
+          <Chip value={100} displayText="100" color="#2c3e50" x={60} y={85} onClick={handleChip100Click} visible={true} />
+        </div>
+      )}
     </div>
   );
 }
