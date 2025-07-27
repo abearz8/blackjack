@@ -4,7 +4,7 @@ import Chip from "../components/Chip";
 import Card from "../components/Card";
 import CardBack from "../components/CardBack";
 import * as globalState from "../utils/globalState";
-import { dealRandomCard, resetDeck } from "../utils/cardDeck";
+import { dealRandomCard, resetDeck, calculateHandValue } from "../utils/cardDeck";
 import { useState } from "react";
 
 interface BettingChip {
@@ -256,7 +256,9 @@ export default function Home() {
             alignItems: "center",
             justifyContent: "center"
           }}>
-            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>Dealer's Hand:</h3>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>
+              Dealer's Hand: {calculateHandValue(gameState.dealerHand)}
+            </h3>
             <div style={{
               display: "flex",
               gap: "1vw",
@@ -290,7 +292,9 @@ export default function Home() {
             alignItems: "center",
             justifyContent: "center"
           }}>
-            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>Your Hand:</h3>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>
+              Your Hand: {calculateHandValue(gameState.playerHand)}
+            </h3>
             <div style={{
               display: "flex",
               gap: "1vw",

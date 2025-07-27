@@ -56,3 +56,36 @@ export const dealRandomCard = (): CardType => {
 export const getRemainingCards = (): number => {
   return 52 - usedCards.length;
 }; 
+
+// Function to calculate hand value
+export function calculateHandValue(cards: CardType[]): number {
+  let total = 0;
+  let aces = 0;
+
+  // First pass: add up all non-ace cards
+  for (const card of cards) {
+    if (card.number === 1) {
+      // Ace - count it later
+      aces++;
+    } else if (card.number >= 11) {
+      // Face cards (J, Q, K) are worth 10
+      total += 10;
+    } else {
+      // Number cards (2-10) are worth their face value
+      total += card.number;
+    }
+  }
+
+  // Second pass: add aces
+  for (let i = 0; i < aces; i++) {
+    if (total + 11 <= 21) {
+      // Use Ace as 11 if it won't bust
+      total += 11;
+    } else {
+      // Use Ace as 1
+      total += 1;
+    }
+  }
+
+  return total;
+} 
