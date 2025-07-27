@@ -48,6 +48,9 @@ export default function Home() {
   // State for game outcomes
   const [gameOutcome, setGameOutcome] = useState<'none' | 'win' | 'loss'>('none');
 
+  // State to track if player has stood
+  const [playerStood, setPlayerStood] = useState(false);
+
   // Function to refresh the display
   const refreshDisplay = () => {
     setMoneyState({
@@ -125,15 +128,67 @@ export default function Home() {
     }));
   };
 
+  // Function to handle stand
+  const handleStand = () => {
+    // Set player as stood
+    setPlayerStood(true);
+    
+    // First, flip the dealer's hidden card
+    let currentDealerHand = [...gameState.dealerHand];
+    let currentDealerHiddenCard = gameState.dealerHiddenCard;
+    
+    // If there's a hidden card, add it to dealer's hand
+    if (currentDealerHiddenCard) {
+      currentDealerHand.push(currentDealerHiddenCard);
+      currentDealerHiddenCard = null;
+    }
+    
+    // Dealer hits until hand is >= 17
+    while (calculateHandValue(currentDealerHand) < 17) {
+      const newCard = dealRandomCard();
+      currentDealerHand.push(newCard);
+    }
+    
+    // Update game state with dealer's final hand
+    setGameState(prevState => ({
+      ...prevState,
+      dealerHand: currentDealerHand,
+      dealerHiddenCard: null
+    }));
+    
+    // Determine winner after a short delay to show dealer's actions
+    setTimeout(() => {
+      const dealerValue = calculateHandValue(currentDealerHand);
+      const playerValue = calculateHandValue(gameState.playerHand);
+      
+      if (dealerValue > 21) {
+        // Dealer busts, player wins
+        handleWin();
+      } else if (dealerValue >= playerValue) {
+        // Dealer wins or ties
+        handleLoss();
+      } else {
+        // Player wins
+        handleWin();
+      }
+    }, 3000); // 3 second delay to show dealer's actions
+  };
+
   // Check for win/loss conditions when player hand changes
   React.useEffect(() => {
     if (gameState.gameStarted && gameState.playerHand.length > 0) {
       const playerHandValue = calculateHandValue(gameState.playerHand);
       
       if (playerHandValue === 21) {
-        handleWin();
+        // Add delay before showing win popup
+        setTimeout(() => {
+          handleWin();
+        }, 1500); // 1.5 second delay
       } else if (playerHandValue > 21) {
-        handleLoss();
+        // Add delay before showing loss popup
+        setTimeout(() => {
+          handleLoss();
+        }, 1500); // 1.5 second delay
       }
     }
   }, [gameState.playerHand]);
@@ -163,6 +218,9 @@ export default function Home() {
     
     // Reset game outcome
     setGameOutcome('none');
+    
+    // Reset player stood state
+    setPlayerStood(false);
     
     // Clear betting chips
     setBettingChips([]);
@@ -346,7 +404,7 @@ export default function Home() {
             justifyContent: "flex-start"
           }}>
             <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw", marginTop: "0" }}>
-              Dealer's Hand: {calculateHandValue(gameState.dealerHand)}
+              Dealer's Hand: {playerStood ? calculateHandValue([...gameState.dealerHand, gameState.dealerHiddenCard].filter(Boolean)) : calculateHandValue(gameState.dealerHand)}
             </h3>
             <div style={{
               position: "relative",
@@ -365,9 +423,17 @@ export default function Home() {
                   />
                 </div>
               ))}
-              {gameState.dealerHiddenCard && (
+              {gameState.dealerHiddenCard && !playerStood && (
                 <div>
                   <CardBack />
+                </div>
+              )}
+              {gameState.dealerHiddenCard && playerStood && (
+                <div>
+                  <Card
+                    number={gameState.dealerHiddenCard.number}
+                    suit={gameState.dealerHiddenCard.suit}
+                  />
                 </div>
               )}
             </div>
@@ -418,57 +484,58 @@ export default function Home() {
               display: "flex",
               gap: "2vw"
             }}>
-              <button
-                onClick={handleHit}
-                style={{
-                  padding: "1vw 2vw",
-                  fontSize: "1.2vw",
-                  fontWeight: "bold",
-                  backgroundColor: "#27ae60",
-                  color: "#fff",
-                  border: "0.2vw solid #fff",
-                  borderRadius: "0.6vw",
-                  cursor: "pointer",
-                  boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
-                  transition: "all 0.2s ease",
-                  minWidth: "8vw",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2ecc71";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#27ae60";
-                }}
-              >
-                Hit
-              </button>
-              <button
-                onClick={() => {
-                  // TODO: Add stand functionality
-                  console.log("Stand button clicked");
-                }}
-                style={{
-                  padding: "1vw 2vw",
-                  fontSize: "1.2vw",
-                  fontWeight: "bold",
-                  backgroundColor: "#e74c3c",
-                  color: "#fff",
-                  border: "0.2vw solid #fff",
-                  borderRadius: "0.6vw",
-                  cursor: "pointer",
-                  boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
-                  transition: "all 0.2s ease",
-                  minWidth: "8vw",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#c0392b";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e74c3c";
-                }}
-              >
-                Stand
-              </button>
+              {!playerStood && (
+                <button
+                  onClick={handleHit}
+                  style={{
+                    padding: "1vw 2vw",
+                    fontSize: "1.2vw",
+                    fontWeight: "bold",
+                    backgroundColor: "#27ae60",
+                    color: "#fff",
+                    border: "0.2vw solid #fff",
+                    borderRadius: "0.6vw",
+                    cursor: "pointer",
+                    boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
+                    transition: "all 0.2s ease",
+                    minWidth: "8vw",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#2ecc71";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#27ae60";
+                  }}
+                >
+                  Hit
+                </button>
+              )}
+              {!playerStood && (
+                <button
+                  onClick={handleStand}
+                  style={{
+                    padding: "1vw 2vw",
+                    fontSize: "1.2vw",
+                    fontWeight: "bold",
+                    backgroundColor: "#e74c3c",
+                    color: "#fff",
+                    border: "0.2vw solid #fff",
+                    borderRadius: "0.6vw",
+                    cursor: "pointer",
+                    boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
+                    transition: "all 0.2s ease",
+                    minWidth: "8vw",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#c0392b";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#e74c3c";
+                  }}
+                >
+                  Stand
+                </button>
+              )}
             </div>
           )}
 
