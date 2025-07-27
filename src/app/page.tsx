@@ -109,6 +109,33 @@ export default function Home() {
     setShowBettingUI(false); // Hide betting UI
   };
 
+  // Function to handle hit
+  const handleHit = () => {
+    // Deal a new card to the player
+    const newCard = dealRandomCard();
+    
+    // Add the new card to the player's hand
+    setGameState(prevState => ({
+      ...prevState,
+      playerHand: [...prevState.playerHand, newCard]
+    }));
+  };
+
+  // Function to calculate card positions for centering
+  const getCardPositions = (numCards: number) => {
+    const cardWidth = 6; // 6vw card width
+    const gap = 1; // 1vw gap between cards
+    const totalWidth = (numCards * cardWidth) + ((numCards - 1) * gap);
+    
+    // Center within the container div (which is 80% of screen width)
+    const startX = 50 - (totalWidth / 2); // Center around 50% of container
+    
+    return Array.from({ length: numCards }, (_, index) => {
+      const x = startX + (index * (cardWidth + gap));
+      return x;
+    });
+  };
+
   // Placeholder click handlers - fill these out with your logic
   const handleChip1Click = () => {
     if(globalState.getTotalMoney() >= 1) {
@@ -250,32 +277,36 @@ export default function Home() {
             top: "25%",
             left: "10%",
             width: "80%",
-            height: "15%",
+            height: "20%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "flex-start"
           }}>
-            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw", marginTop: "0" }}>
               Dealer's Hand: {calculateHandValue(gameState.dealerHand)}
             </h3>
             <div style={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
               display: "flex",
-              gap: "1vw",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              gap: "1vw"
             }}>
               {gameState.dealerHand.map((card, index) => (
-                <Card
-                  key={`dealer-${index}`}
-                  number={card.number}
-                  suit={card.suit}
-                />
+                <div key={`dealer-${index}`}>
+                  <Card
+                    number={card.number}
+                    suit={card.suit}
+                  />
+                </div>
               ))}
               {gameState.dealerHiddenCard && (
-                <CardBack
-                  key="dealer-hidden"
-                />
+                <div>
+                  <CardBack />
+                </div>
               )}
             </div>
           </div>
@@ -286,30 +317,98 @@ export default function Home() {
             bottom: "28%",
             left: "10%",
             width: "80%",
-            height: "15%",
+            height: "20%",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "flex-start"
           }}>
-            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw" }}>
+            <h3 style={{ color: "white", marginBottom: "1vw", fontSize: "1.2vw", marginTop: "0" }}>
               Your Hand: {calculateHandValue(gameState.playerHand)}
             </h3>
             <div style={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
               display: "flex",
-              gap: "1vw",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              gap: "1vw"
             }}>
               {gameState.playerHand.map((card, index) => (
-                <Card
-                  key={`player-${index}`}
-                  number={card.number}
-                  suit={card.suit}
-                />
+                <div key={`player-${index}`}>
+                  <Card
+                    number={card.number}
+                    suit={card.suit}
+                  />
+                </div>
               ))}
             </div>
           </div>
+
+          {/* Game Action Buttons */}
+          {gameState.gameStarted && (
+            <div style={{
+              position: "absolute",
+              bottom: "8%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: "2vw"
+            }}>
+              <button
+                onClick={handleHit}
+                style={{
+                  padding: "1vw 2vw",
+                  fontSize: "1.2vw",
+                  fontWeight: "bold",
+                  backgroundColor: "#27ae60",
+                  color: "#fff",
+                  border: "0.2vw solid #fff",
+                  borderRadius: "0.6vw",
+                  cursor: "pointer",
+                  boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
+                  transition: "all 0.2s ease",
+                  minWidth: "8vw",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#2ecc71";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#27ae60";
+                }}
+              >
+                Hit
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Add stand functionality
+                  console.log("Stand button clicked");
+                }}
+                style={{
+                  padding: "1vw 2vw",
+                  fontSize: "1.2vw",
+                  fontWeight: "bold",
+                  backgroundColor: "#e74c3c",
+                  color: "#fff",
+                  border: "0.2vw solid #fff",
+                  borderRadius: "0.6vw",
+                  cursor: "pointer",
+                  boxShadow: "0.1vw 0.1vw 0.4vw rgba(0,0,0,0.2)",
+                  transition: "all 0.2s ease",
+                  minWidth: "8vw",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#c0392b";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e74c3c";
+                }}
+              >
+                Stand
+              </button>
+            </div>
+          )}
         </div>
       )}
 
