@@ -787,7 +787,6 @@ export default function Home() {
             x={36} 
             y={85} 
             onClick={moneyState.totalMoney >= 1 ? handleChip1Click : undefined} 
-            visible={true} 
           />
           <Chip 
             value={5} 
@@ -796,7 +795,6 @@ export default function Home() {
             x={42} 
             y={85} 
             onClick={moneyState.totalMoney >= 5 ? handleChip5Click : undefined} 
-            visible={true} 
           />
           <Chip 
             value={10} 
@@ -805,7 +803,6 @@ export default function Home() {
             x={48} 
             y={85} 
             onClick={moneyState.totalMoney >= 10 ? handleChip10Click : undefined} 
-            visible={true} 
           />
           <Chip 
             value={25} 
@@ -814,7 +811,6 @@ export default function Home() {
             x={54} 
             y={85} 
             onClick={moneyState.totalMoney >= 25 ? handleChip25Click : undefined} 
-            visible={true} 
           />
           <Chip 
             value={100} 
@@ -823,7 +819,6 @@ export default function Home() {
             x={60} 
             y={85} 
             onClick={moneyState.totalMoney >= 100 ? handleChip100Click : undefined} 
-            visible={true} 
           />
         </div>
       )}
